@@ -187,7 +187,7 @@ Now it's time to configure the native Component so that we can generate the requ
 For iOS, we need to create a `podspec` file which will define the Component as a dependency.
 The `podspec` file for our Component will look like this
 
-```groovy title="rnt-centered-text.podspec"
+```ruby title="rnt-centered-text.podspec"
 require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
@@ -242,7 +242,7 @@ Finally, we have a set of dependencies that are required by the new architecture
 
 For what concerns Android, we need to create a `build.gradle` file in the `android` folder. The file will have the following shape
 
-```ruby title="build.gradle"
+```kotlin title="build.gradle"
 buildscript {
   ext.safeExtGet = {prop, fallback ->
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
