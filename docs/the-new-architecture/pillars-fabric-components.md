@@ -109,6 +109,180 @@ Finally, we invoke the `codegenNativeComponent` generic function, passing the na
 
 ### Component Configuration
 
+The second element we need to properly develop the Component is a bit of configuration, that will help you setting up:
+
+- the Codegen
+- the files to link the Component in the app.
+
+Some of these configuration are shared between iOS and Android, while the others are platform specific.
+
+#### Shared
+
+The shared bit is a `package.json` file that will be used by yarn to install your Component.
+The file shall live at the root of your Component, side-by-side to the folders created at the [folder Setup](#folder-setup) step.
+
+```json
+{
+  "name": "rnt-centered-text",
+  "version": "0.0.1",
+  "description": "Showcase a Fabric Component with a centered text",
+  "react-native": "js/index",
+  "source": "js/index",
+  "files": [
+    "js",
+    "android",
+    "ios",
+    "rnt-centered-text.podspec",
+    "!android/build",
+    "!ios/build",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__"
+  ],
+  "keywords": ["react-native", "ios", "android"],
+  "repository": "https://github.com/<your_github_handle>/rnt-centered-text",
+  "author": "<Your Name> <your_email@your_provider.com> (https://github.com/<your_github_handle>)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/<your_github_handle>/rnt-centered-text/issues"
+  },
+  "homepage": "https://github.com/<your_github_handle>/rnt-centered-text#readme",
+  "devDependencies": {},
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
+  // highlight-start
+  "codegenConfig": {
+    "name": "RNTCenteredTextSpecs",
+    "type": "all",
+    "jsSrcsDir": "js",
+    "android": {
+      "javaPackageName": "com.RTNCenteredText"
+    }
+  }
+  // highlight-end
+}
+```
+
+Let's break it down.
+
+The upper part of the file contains some descriptive information like the name of the Component, its version and what composes it.
+Make sure to update the various placeholders which are wrapped in `<>`, so replace all the occurrences of the `<your_github_handle>`, `<Your Name>`, and `<your_email@your_provider.com>` tokens.
+
+Then we have the dependencies for this package, specifically we need `react` and `react-native`, but you can add all the other dependencies you may have.
+
+Finally, the last important bit is the `codegenConfig` tag. This will be used **In Development** to automatically generate the code. It will be useful to see what is generated so that we can refer to the proper types. This object contains three keys:
+
+- `name`: The name of the library we are going to generate. By convention, we add the `Specs` suffix.
+- `type`: You can choose between `components` and `all`. Our suggestion is to leave `all` because it will push for extensibility in case you'll want to add also a TurboModule to this Component.
+- `jsSrcsDir`: the relative path to access the `js` specification that will be parsed by the Codegen.
+- `android`: an object that contains android-specific settings.
+  - `javaPackageName`: the name of the package that must be used to generate the code.
+
+#### iOS: Create the `podspec` file
+
+Now it's time to configure the native Component so that we can generate the required code and we can include it in our app.
+
+For iOS, we need to create a `podspec` file which will define the Component as a dependency.
+The `podspec` file for our Component will look like this
+
+```ruby title="rnt-centered-text.podspec"
+require "json"
+
+package = JSON.parse(File.read(File.join(__dir__, "package.json")))
+
+folly_version = '2021.06.28.00-v2'
+folly_compiler_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
+
+Pod::Spec.new do |s|
+  s.name            = "rnt-centered-text"
+  s.version         = package["version"]
+  s.summary         = package["description"]
+  s.description     = package["description"]
+  s.homepage        = package["homepage"]
+  s.license         = package["license"]
+  s.platforms       = { :ios => "11.0" }
+  s.author          = package["author"]
+  s.source          = { :git => package["repository"], :tag => "#{s.version}" }
+
+  s.source_files    = "ios/**/*.{h,m,mm,swift}"
+
+  s.dependency "React-Core"
+
+  s.compiler_flags = folly_compiler_flags + " -DRCT_NEW_ARCH_ENABLED=1"
+  s.pod_target_xcconfig    = {
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\"",
+    "OTHER_CPLUSPLUSFLAGS" => "-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1",
+    "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
+  }
+
+  s.dependency "React-RCTFabric"
+  s.dependency "React-Codegen"
+  s.dependency "RCT-Folly", folly_version
+  s.dependency "RCTRequired"
+  s.dependency "RCTTypeSafety"
+  s.dependency "ReactCommon/turbomodule/core"
+end
+```
+
+The `podspec` file has to be a sibling of the `package.json` file and its name is the one we set in the `package.json`'s `name` property: `rnt-centered-text`.
+
+The first part of the file prepares some variables we will use throughout the rest of it:
+
+- the `package` variable which contains information read from the `package.json`
+- the `folly_version` variable to set the version of `folly` we need.
+- the `folly compiler_flags` that we need to set in the new architecture.
+
+The next section contains some information used to configure the pod, like its name, version, a description and so on.
+
+Finally, we have a set of dependencies that are required by the new architecture.
+
+#### Android: Create the `build.gradle` file
+
+For what concerns Android, we need to create a `build.gradle` file in the `android` folder. The file will have the following shape
+
+```kotlin title="build.gradle"
+buildscript {
+  ext.safeExtGet = {prop, fallback ->
+    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+  }
+  repositories {
+    google()
+    gradlePluginPortal()
+  }
+  dependencies {
+    classpath("com.android.tools.build:gradle:7.1.1")
+  }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'com.facebook.react'
+
+android {
+  compileSdkVersion safeExtGet('compileSdkVersion', 31)
+
+  defaultConfig {
+    minSdkVersion safeExtGet('minSdkVersion', 21)
+    targetSdkVersion safeExtGet('targetSdkVersion', 31)
+    buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", true
+  }
+}
+
+repositories {
+  maven {
+    // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+    url "$projectDir/../node_modules/react-native/android"
+  }
+  mavenCentral()
+  google()
+}
+
+dependencies {
+  implementation 'com.facebook.react:react-native:+'
+}
+```
+
 ### Native Code
 
 #### iOS
