@@ -303,11 +303,11 @@ To generate the code starting from the JS specs for iOS, we need to open a termi
 
 ```sh
 cd MyApp
-yarn add ../RTNCenteredTextFlow
+yarn add ../RTNCenteredText
 cd ..
 node MyApp/node_modules/react-native/scripts/generate-artifacts.js \
   --path MyApp/ \
-  --outputPath RTNCenteredTextFlow/generated/
+  --outputPath RTNCenteredText/generated/
 ```
 
 This script first makes our Component visible to the app, so that we can generate the **CodeGen** from it, using `yarn add` to add a local version of the NPM package.
@@ -519,3 +519,66 @@ Differently from Native Components, Fabric requires us to manually implement the
 #### Android
 
 ### Adding the Fabric Component To Your App
+
+This is the last step to finally see our Fabric Component running on our app.
+
+#### iOS
+
+To achieve this in iOS, we need to issue a couple of commands and then we can read the Component from JS.
+
+First of all, we need to add the npm package which contains the Component to the app. This can be done with the following command:
+
+```sh
+cd MyApp
+yarn add ../RTNCenteredText
+```
+
+This command will add the `RTNCenteredText` Component to the `node_modules` of your app.
+
+:::note
+That the same command we run in the [**CodeGen** step](#generate-the-code) for iOS. If you run it previously, remember to first remove the package and then to add it back, in order to bring in the recent changes to the native code. The shell command to remove the package is:
+
+```sh
+yarn remove rn-centered-text
+```
+
+:::
+
+Then, we need to install the new dependencies in our iOS project. To do so, we need to run these commands:
+
+```sh
+cd ios
+RCT_NEW_ARCH_ENABLED=1 pod install
+```
+
+This command will look for all the dependencies of the project and it will install the iOS ones. The `RCT_NEW_ARCH_ENABLED=1` instruct **Cocoapods** that it has to run some additional operations to run the **CodeGen** that is required by **Fabric**.
+
+#### Android
+
+#### JS
+Finally, we can read the Component in our JS application.
+To do so, we have to:
+
+1. Import the Component in the js file that uses it. So, if we want to use it in the `App.js`, we need to add this line:
+
+   ```js title="App.js"
+   import RTNCenteredText from 'rnt-centered-text/js/RNTCenteredTextNativeComponent';
+   ```
+
+2. Then, we need to use it in another React Native component. The syntax is the same as for any other component:
+   ```js title="App.js"
+   // ... other code
+   const App: () => Node = () => {
+     // ... other App code ...
+     return (
+       // ...other RN elements...
+       <RTNCenteredText
+         text="Hello World!"
+         style={{ width: '100%', height: 30 }}
+       />
+       // ...other RN Elements
+     );
+   };
+   ```
+
+Now, we can run the React Native app and see our Component on the screen.
