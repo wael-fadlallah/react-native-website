@@ -242,18 +242,18 @@ Finally, we have a set of dependencies that are required by the new architecture
 
 For what concerns Android, we need to create a `build.gradle` file in the `android` folder. The file will have the following shape
 
-```kotlin title="build.gradle"
+```ruby title="build.gradle"
 buildscript {
-  ext.safeExtGet = {prop, fallback ->
-    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
-  }
-  repositories {
-    google()
-    gradlePluginPortal()
-  }
-  dependencies {
-    classpath("com.android.tools.build:gradle:7.1.1")
-  }
+    ext.safeExtGet = {prop, fallback ->
+        rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+    }
+    repositories {
+        google()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:7.1.1")
+    }
 }
 
 apply plugin: 'com.android.library'
@@ -263,9 +263,9 @@ android {
     compileSdkVersion safeExtGet('compileSdkVersion', 31)
 
     defaultConfig {
-      minSdkVersion safeExtGet('minSdkVersion', 21)
-      targetSdkVersion safeExtGet('targetSdkVersion', 31)
-      buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", "true")
+        minSdkVersion safeExtGet('minSdkVersion', 21)
+        targetSdkVersion safeExtGet('targetSdkVersion', 31)
+        buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", "true")
     }
 }
 
