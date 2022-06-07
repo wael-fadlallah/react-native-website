@@ -44,6 +44,13 @@ const oses = [
 ];
 const defaultOs = isMacOS ? 'macos' : isWindows ? 'windows' : 'linux';
 
+const newArchFeatures = [
+  {label: 'TurboModules', value: 'turbomodules'},
+  {label: 'Fabric Components', value: 'fabric-components'},
+];
+
+const defaultNewArchFeature = 'turbomodules';
+
 const getDevNotesTabs = (tabs = ['android', 'ios', 'web', 'windows']) =>
   [
     tabs.includes('android') ? {label: 'Android', value: 'android'} : undefined,
@@ -59,6 +66,7 @@ export default {
   defaultPlatform,
   defaultSyntax,
   defaultAndroidLanguage,
+  defaultNewArchFeature,
   getDevNotesTabs,
   guides,
   oses,
@@ -66,4 +74,5 @@ export default {
   platforms,
   syntax,
   androidLanguages,
+  newArchFeatures,
 };
