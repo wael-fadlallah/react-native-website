@@ -187,7 +187,7 @@ Now it's time to configure the native Component so that we can generate the requ
 For iOS, we need to create a `podspec` file which will define the Component as a dependency.
 The `podspec` file for our Component will look like this
 
-```ruby title="rnt-centered-text.podspec"
+```groovy title="rnt-centered-text.podspec"
 require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
@@ -242,7 +242,7 @@ Finally, we have a set of dependencies that are required by the new architecture
 
 For what concerns Android, we need to create a `build.gradle` file in the `android` folder. The file will have the following shape
 
-```kotlin title="build.gradle"
+```ruby title="build.gradle"
 buildscript {
   ext.safeExtGet = {prop, fallback ->
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
@@ -260,26 +260,26 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.facebook.react'
 
 android {
-  compileSdkVersion safeExtGet('compileSdkVersion', 31)
+    compileSdkVersion safeExtGet('compileSdkVersion', 31)
 
-  defaultConfig {
-    minSdkVersion safeExtGet('minSdkVersion', 21)
-    targetSdkVersion safeExtGet('targetSdkVersion', 31)
-    buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", true
-  }
+    defaultConfig {
+      minSdkVersion safeExtGet('minSdkVersion', 21)
+      targetSdkVersion safeExtGet('targetSdkVersion', 31)
+      buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", "true")
+    }
 }
 
 repositories {
-  maven {
-    // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-    url "$projectDir/../node_modules/react-native/android"
-  }
-  mavenCentral()
-  google()
+    maven {
+        // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+        url "$projectDir/../node_modules/react-native/android"
+    }
+    mavenCentral()
+    google()
 }
 
 dependencies {
-  implementation 'com.facebook.react:react-native:+'
+    implementation 'com.facebook.react:react-native:+'
 }
 ```
 
@@ -297,7 +297,7 @@ the code when the app is built. This allows to avoid any ABI incompatibility and
 
 #### iOS
 
-##### Generate the code
+##### Generate the code - iOS
 
 To generate the code starting from the JS specs for iOS, we need to open a terminal and run the following command:
 
@@ -518,6 +518,223 @@ Differently from Native Components, Fabric requires us to manually implement the
 
 #### Android
 
+Android follows some similar steps to iOS. We have to generate the code for Android, and then we have to write some native code to make it works.
+
+##### Generate the Code - Android
+
+To generate the code for Android, we need to manually invoke the CodeGen. This is done similarly to what we did for iOS: first, we need to add the package to the app and then we need to invoke a script.
+
+```sh title="Running CodeGen for Android"
+cd MyApp
+yarn add ../RTNCenteredText
+cd android
+./gradlew generateCodegenArtifactsFromSchema --rerun-tasks
+```
+
+This script first adds the package to the app, in the same way iOS does. Then, after moving to the `android` folder, it invokes a Gradle task to generate the codegen.
+
+The generated code is stored in the `MyApp/node_modules/rnt-centered-text/android/build/generated/source/codegen` folder and it has this structure:
+
+```title="Android generated code"
+codegen
+├── java
+│   └── com
+│       └── facebook
+│           └── react
+│               └── viewmanagers
+│                   ├── RTNCenteredTextManagerDelegate.java
+│                   └── RTNCenteredTextManagerInterface.java
+├── jni
+│   ├── Android.mk
+│   ├── CMakeLists.txt
+│   ├── RTNCenteredText-generated.cpp
+│   ├── RTNCenteredText.h
+│   └── react
+│       └── renderer
+│           └── components
+│               └── RTNCenteredText
+│                   ├── ComponentDescriptors.h
+│                   ├── EventEmitters.cpp
+│                   ├── EventEmitters.h
+│                   ├── Props.cpp
+│                   ├── Props.h
+│                   ├── ShadowNodes.cpp
+│                   └── ShadowNodes.h
+└── schema.json
+```
+
+You can see that the content of the `codegen/jni/react/renderer/components/RTNCenteredTextSpecs` looks similar to the files created by the iOS counterpart. Other interesting pieces are the `Android.mk` and `CMakeList.txt` files, which we need to configure the Fabric Component in the app, and the `RTNCenteredTextManagerDelegate.java` and `RTNCenteredTextManagerInterface.java` that we need to use in our manager.
+
+See the [CodeGen](./pillars-codegen) section for further details on the generated files.
+
+##### Write the Native Android Code
+
+The native code for the Android side of a Fabric Components requires four pieces:
+
+1. An `AndroidManifest.xml` file.
+2. A `RTNCenteredText.java` that represents the actual view.
+3. A `RTNCenteredTextManager.java` to instantiate the view.
+4. A `RTNCenteredTextPackage.java` that React Native uses to configure the library.
+
+The final structure within the Android library should be like this.
+
+```title="Android Folder Structure"
+android
+├── build.gradle
+└── src
+    └── main
+        ├── AndroidManifest.xml
+        └── java
+            └── com
+                └── rtncenteredtext
+                    ├── RTNCenteredText.java
+                    ├── RTNCenteredTextManager.java
+                    └── RTNCenteredTextPackage.java
+```
+
+###### AndroidManifest.xml
+
+```xml title="AndroidManifest.xml"
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.rtncenteredtext">
+</manifest>
+```
+
+This is a small manifest file that defines the package for our module.
+
+###### RTNCenteredText.java
+
+```java title="RTNCenteredText"
+package com.rtncenteredtext;
+
+import androidx.annotation.Nullable;
+import android.content.Context;
+import android.util.AttributeSet;
+import android.graphics.Color;
+
+import android.widget.TextView;
+import android.view.Gravity;
+
+public class RTNCenteredText extends TextView {
+
+    public RTNCenteredText(Context context) {
+        super(context);
+        this.configureComponent();
+    }
+
+    public RTNCenteredText(Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+        this.configureComponent();
+    }
+
+    public RTNCenteredText(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        this.configureComponent();
+    }
+
+    private void configureComponent() {
+        this.setBackgroundColor(Color.RED);
+        this.setGravity(Gravity.CENTER_HORIZONTAL);
+    }
+}
+```
+
+This class represents the actual view Android is going to represent on screen. It inherit from `TextView` and we configure the basic aspects of it using a private `configureComponent()` function
+
+###### RTNCenteredTextManager.java
+
+```java title="RTNCenteredTextManager.java"
+package com.rtncenteredtext;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.module.annotations.ReactModule;
+import com.facebook.react.uimanager.SimpleViewManager;
+import com.facebook.react.uimanager.ThemedReactContext;
+import com.facebook.react.uimanager.ViewManagerDelegate;
+import com.facebook.react.uimanager.annotations.ReactProp;
+import com.facebook.react.viewmanagers.RTNCenteredTextManagerInterface;
+import com.facebook.react.viewmanagers.RTNCenteredTextManagerDelegate;
+
+
+@ReactModule(name = RTNCenteredTextManager.NAME)
+public class RTNCenteredTextManager extends SimpleViewManager<RTNCenteredText>
+        implements RTNCenteredTextManagerInterface<RTNCenteredText> {
+
+    private final ViewManagerDelegate<RTNCenteredText> mDelegate;
+
+    static final String NAME = "RTNCenteredText";
+
+    public RTNCenteredTextManager(ReactApplicationContext context) {
+        mDelegate = new RTNCenteredTextManagerDelegate<>(this);
+    }
+
+    @Nullable
+    @Override
+    protected ViewManagerDelegate<RTNCenteredText> getDelegate() {
+        return mDelegate;
+    }
+
+    @NonNull
+    @Override
+    public String getName() {
+        return RTNCenteredTextManager.NAME;
+    }
+
+    @NonNull
+    @Override
+    protected RTNCenteredText createViewInstance(@NonNull ThemedReactContext context) {
+        return new RTNCenteredText(context);
+    }
+
+    @Override
+    @ReactProp(name = "text")
+    public void setText(RTNCenteredText view, @Nullable String text) {
+        view.setText(text);
+    }
+}
+```
+
+The `RTNCenteredTextManager` is a class used by React Native to instantiate the native component. It is the class that leverage the **CodeGen** in order to implement all the proper interfaces (See the `RTNCenteredTextManagerInterface` interface in the `implements` clause) and it uses the `RTNCenteredTextManagerDelegate`.
+
+It is also responsible to export all the constructs required by ReactNative: the class itself is annotated with `@ReactModule` and the `setText` method is annothated with `@ReactProp`.
+
+###### RTNCenteredTextPackage.java
+
+```java title="RTNCenteredTextPackage"
+package com.rtncenteredtext;
+
+import com.facebook.react.ReactPackage;
+import com.facebook.react.bridge.NativeModule;
+import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.uimanager.ViewManager;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class RTNCenteredTextPackage implements ReactPackage {
+
+    @Override
+    public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
+        List<ViewManager> viewManagers = new ArrayList<>();
+        viewManagers.add(new RTNCenteredTextManager(reactContext));
+        return viewManagers;
+    }
+
+    @Override
+    public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
+        return Collections.emptyList();
+    }
+
+}
+```
+
+This is the last piece of Native Code for Android. It defines the Package object that will be used by the app to load the manager.
+
 ### Adding the Fabric Component To Your App
 
 This is the last step to finally see our Fabric Component running on our app.
@@ -536,7 +753,7 @@ yarn add ../RTNCenteredText
 This command will add the `RTNCenteredText` Component to the `node_modules` of your app.
 
 :::note
-That the same command we run in the [**CodeGen** step](#generate-the-code) for iOS. If you run it previously, remember to first remove the package and then to add it back, in order to bring in the recent changes to the native code. The shell command to remove the package is:
+That is the same command we run in the [**CodeGen** step](#generate-the-code-ios) for iOS. If you run it previously, remember to first remove the package and then to add it back, in order to bring in the recent changes to the native code. The shell command to remove the package is:
 
 ```sh
 yarn remove rn-centered-text
