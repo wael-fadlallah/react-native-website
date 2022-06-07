@@ -537,11 +537,6 @@ This script first adds the package to the app, in the same way iOS does. Then, a
 To run the CodeGen, you need to enable the **New Architecture** in the Android app. This can be done by opening the `gradle.properties` files and by switching the `newArchEnabled` property from `false` to `true`.
 :::
 
-:::note
-To run the codegen, you need to enable the **New Architecture** in the Android app. This can be done by opening the `gradle.properties` files and by switching the `newArchEnabled` property from `false` to `true`.
-
-:::
-
 The generated code is stored in the `MyApp/node_modules/rtn-centered-text/android/build/generated/source/codegen` folder and it has this structure:
 
 ```title="Android generated code"
