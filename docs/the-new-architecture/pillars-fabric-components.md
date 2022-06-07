@@ -28,7 +28,7 @@ To create a Fabric Component, we have to follow these steps:
 
 Once these steps are done, the Component is ready to be consumend by an app. Therefore, the guide shows how to add it to an app, leveraging the _autolinking_, and how to reference it from the JavaScript code.
 
-### Folder Setup
+## 1. Folder Setup
 
 The easiest way to create a Component is as a separate module we will then import as a dependency for our apps. This has several benefits, among which it pushes for code reuse, it keeps the components decoupled from the rest of the apps and it makes it easier to leverage some automation already in place.
 
@@ -107,7 +107,7 @@ The second section of the files contains the **props** of the Component. Props a
 
 Finally, we invoke the `codegenNativeComponent` generic function, passing the name we want to use for our Component. The returned value is then exported by the JavaScript file in order to be used by the app.
 
-### Component Configuration
+## 2. Component Configuration
 
 The second element we need to properly develop the Component is a bit of configuration, that will help you setting up:
 
@@ -116,14 +116,14 @@ The second element we need to properly develop the Component is a bit of configu
 
 Some of these configuration are shared between iOS and Android, while the others are platform specific.
 
-#### Shared
+### Shared
 
 The shared bit is a `package.json` file that will be used by yarn to install your Component.
 The file shall live at the root of your Component, side-by-side to the folders created at the [folder Setup](#folder-setup) step.
 
 ```json
 {
-  "name": "rnt-centered-text",
+  "name": "rtn-centered-text",
   "version": "0.0.1",
   "description": "Showcase a Fabric Component with a centered text",
   "react-native": "js/index",
@@ -132,7 +132,7 @@ The file shall live at the root of your Component, side-by-side to the folders c
     "js",
     "android",
     "ios",
-    "rnt-centered-text.podspec",
+    "rtn-centered-text.podspec",
     "!android/build",
     "!ios/build",
     "!**/__tests__",
@@ -140,13 +140,13 @@ The file shall live at the root of your Component, side-by-side to the folders c
     "!**/__mocks__"
   ],
   "keywords": ["react-native", "ios", "android"],
-  "repository": "https://github.com/<your_github_handle>/rnt-centered-text",
+  "repository": "https://github.com/<your_github_handle>/rtn-centered-text",
   "author": "<Your Name> <your_email@your_provider.com> (https://github.com/<your_github_handle>)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/<your_github_handle>/rnt-centered-text/issues"
+    "url": "https://github.com/<your_github_handle>/rtn-centered-text/issues"
   },
-  "homepage": "https://github.com/<your_github_handle>/rnt-centered-text#readme",
+  "homepage": "https://github.com/<your_github_handle>/rtn-centered-text#readme",
   "devDependencies": {},
   "peerDependencies": {
     "react": "*",
@@ -154,7 +154,7 @@ The file shall live at the root of your Component, side-by-side to the folders c
   },
   // highlight-start
   "codegenConfig": {
-    "name": "RNTCenteredTextSpecs",
+    "name": "RTNCenteredTextSpecs",
     "type": "all",
     "jsSrcsDir": "js",
     "android": {
@@ -180,14 +180,14 @@ Finally, the last important bit is the `codegenConfig` tag. This will be used **
 - `android`: an object that contains android-specific settings.
   - `javaPackageName`: the name of the package that must be used to generate the code.
 
-#### iOS: Create the `podspec` file
+### iOS - Create the `podspec` File
 
 Now it's time to configure the native Component so that we can generate the required code and we can include it in our app.
 
 For iOS, we need to create a `podspec` file which will define the Component as a dependency.
 The `podspec` file for our Component will look like this
 
-```ruby title="rnt-centered-text.podspec"
+```ruby title="rtn-centered-text.podspec"
 require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
@@ -196,7 +196,7 @@ folly_version = '2021.06.28.00-v2'
 folly_compiler_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
 
 Pod::Spec.new do |s|
-  s.name            = "rnt-centered-text"
+  s.name            = "rtn-centered-text"
   s.version         = package["version"]
   s.summary         = package["description"]
   s.description     = package["description"]
@@ -226,7 +226,7 @@ Pod::Spec.new do |s|
 end
 ```
 
-The `podspec` file has to be a sibling of the `package.json` file and its name is the one we set in the `package.json`'s `name` property: `rnt-centered-text`.
+The `podspec` file has to be a sibling of the `package.json` file and its name is the one we set in the `package.json`'s `name` property: `rtn-centered-text`.
 
 The first part of the file prepares some variables we will use throughout the rest of it:
 
@@ -238,7 +238,7 @@ The next section contains some information used to configure the pod, like its n
 
 Finally, we have a set of dependencies that are required by the new architecture.
 
-#### Android: Create the `build.gradle` file
+### Android - Create the `build.gradle` File
 
 For what concerns Android, we need to create a `build.gradle` file in the `android` folder. The file will have the following shape
 
@@ -283,7 +283,7 @@ dependencies {
 }
 ```
 
-### Native Code
+## 3. Native Code
 
 The last step requires us to write some native code to connect the JS side of our Component to what is offered by the platforms. This process requires two main steps:
 
@@ -295,9 +295,9 @@ The code generated by the **CodeGen** in this step should not be committed to th
 the code when the app is built. This allows to avoid any ABI incompatibility and to ensure that a consistent version of the codege is used.
 :::
 
-#### iOS
+### iOS - CodeGen, View and ViewManager
 
-##### Generate the code - iOS
+#### Generate the code - iOS
 
 To generate the code starting from the JS specs for iOS, we need to open a terminal and run the following command:
 
@@ -331,7 +331,7 @@ generated
             └── react
                 └── renderer
                     └── components
-                        ├── RNTCenteredTextSpecs
+                        ├── RTNCenteredTextSpecs
                         │   ├── ComponentDescriptors.h
                         │   ├── EventEmitters.cpp
                         │   ├── EventEmitters.h
@@ -351,23 +351,23 @@ generated
                             └── ShadowNodes.h
 ```
 
-The relevant path for the Component we are writing is `generated/build/generated/ios/react/renderer/components/RNTCenteredTextSpecs`.
+The relevant path for the Component we are writing is `generated/build/generated/ios/react/renderer/components/RTNCenteredTextSpecs`.
 This folder contains all the genereted code required by our Component.
 
 See the [CodeGen](./pillars-codegen) section for further details on the generated files.
 
-##### Write the Native iOS Code
+#### Write the Native iOS Code
 
 Now that we can see the iOS code we need, it's time to write the Native code for our Fabric Component.
 We need to create three files:
 
-1. The `RNTCenteredTextManager.mm`, an Objective-C++ file which declares what the Component exports.
-2. The `RNTCenteredText.h`, an header file for the actual view.
-3. The `RNTCenteredText.mm`, the implementation of the view.
+1. The `RTNCenteredTextManager.mm`, an Objective-C++ file which declares what the Component exports.
+2. The `RTNCenteredText.h`, an header file for the actual view.
+3. The `RTNCenteredText.mm`, the implementation of the view.
 
-###### RNTCenteredTextManager.mm
+##### RTNCenteredTextManager.mm
 
-```obj-c title="RNTCenteredTextManager.mm"
+```obj-c title="RTNCenteredTextManager.mm"
 #import <React/RCTLog.h>
 #import <React/RCTUIManager.h>
 #import <React/RCTViewManager.h>
@@ -401,9 +401,9 @@ Finally, we need to add a `- ((UIView *)view)` method for legacy reasons.
 There are other macros that can be used to export custom properties, emitters and other constructs. You can look them up [here](https://github.com/facebook/react-native/blob/main/React/Views/RCTViewManager.h)
 :::
 
-###### RNTCenteredText.h
+##### RTNCenteredText.h
 
-```Objective-C title="RNTCenteredText.h"
+```Objective-C title="RTNCenteredText.h"
 #import <React/RCTViewComponentView.h>
 #import <UIKit/UIKit.h>
 
@@ -418,15 +418,15 @@ NS_ASSUME_NONNULL_END
 
 This file defines the interface for the `RTNCenteredText` view. Here, we can add any native method we may want to invoke on the view. For this guide, we don't need anything, therefore the interface is empty.
 
-###### RNTCenteredText.mm
+##### RTNCenteredText.mm
 
-```C++ title="RNTCenteredText.mm"
+```C++ title="RTNCenteredText.mm"
 #import "RTNCenteredText.h"
 
-#import <react/renderer/components/RNTCenteredTextSpecs/ComponentDescriptors.h>
-#import <react/renderer/components/RNTCenteredTextSpecs/EventEmitters.h>
-#import <react/renderer/components/RNTCenteredTextSpecs/Props.h>
-#import <react/renderer/components/RNTCenteredTextSpecs/RCTComponentViewHelpers.h>
+#import <react/renderer/components/RTNCenteredTextSpecs/ComponentDescriptors.h>
+#import <react/renderer/components/RTNCenteredTextSpecs/EventEmitters.h>
+#import <react/renderer/components/RTNCenteredTextSpecs/Props.h>
+#import <react/renderer/components/RTNCenteredTextSpecs/RCTComponentViewHelpers.h>
 
 #import "RCTFabricComponentsPlugins.h"
 
@@ -516,11 +516,11 @@ Finally, the `RTNCenteredTextCls` is another static method used to retrieve the 
 Differently from Native Components, Fabric requires us to manually implement the `updateProps` method. It's not enough to export properties with the `RCT_EXPORT_XXX` and `RCT_REMAP_XXX` macros.
 :::
 
-#### Android
+### Android - CodeGen, View and ViewManager
 
 Android follows some similar steps to iOS. We have to generate the code for Android, and then we have to write some native code to make it works.
 
-##### Generate the Code - Android
+#### Generate the Code - Android
 
 To generate the code for Android, we need to manually invoke the CodeGen. This is done similarly to what we did for iOS: first, we need to add the package to the app and then we need to invoke a script.
 
@@ -542,7 +542,7 @@ To run the codegen, you need to enable the **New Architecture** in the Android a
 
 :::
 
-The generated code is stored in the `MyApp/node_modules/rnt-centered-text/android/build/generated/source/codegen` folder and it has this structure:
+The generated code is stored in the `MyApp/node_modules/rtn-centered-text/android/build/generated/source/codegen` folder and it has this structure:
 
 ```title="Android generated code"
 codegen
@@ -576,7 +576,7 @@ You can see that the content of the `codegen/jni/react/renderer/components/RTNCe
 
 See the [CodeGen](./pillars-codegen) section for further details on the generated files.
 
-##### Write the Native Android Code
+#### Write the Native Android Code
 
 The native code for the Android side of a Fabric Components requires four pieces:
 
@@ -601,7 +601,7 @@ android
                     └── RTNCenteredTextPackage.java
 ```
 
-###### AndroidManifest.xml
+##### AndroidManifest.xml
 
 ```xml title="AndroidManifest.xml"
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -611,7 +611,7 @@ android
 
 This is a small manifest file that defines the package for our module.
 
-###### RTNCenteredText.java
+##### RTNCenteredText.java
 
 ```java title="RTNCenteredText"
 package com.rtncenteredtext;
@@ -650,7 +650,7 @@ public class RTNCenteredText extends TextView {
 
 This class represents the actual view Android is going to represent on screen. It inherit from `TextView` and we configure the basic aspects of it using a private `configureComponent()` function
 
-###### RTNCenteredTextManager.java
+##### RTNCenteredTextManager.java
 
 ```java title="RTNCenteredTextManager.java"
 package com.rtncenteredtext;
@@ -711,7 +711,7 @@ The `RTNCenteredTextManager` is a class used by React Native to instantiate the 
 
 It is also responsible to export all the constructs required by ReactNative: the class itself is annotated with `@ReactModule` and the `setText` method is annothated with `@ReactProp`.
 
-###### RTNCenteredTextPackage.java
+##### RTNCenteredTextPackage.java
 
 ```java title="RTNCenteredTextPackage"
 package com.rtncenteredtext;
@@ -744,11 +744,11 @@ public class RTNCenteredTextPackage implements ReactPackage {
 
 This is the last piece of Native Code for Android. It defines the Package object that will be used by the app to load the manager.
 
-### Adding the Fabric Component To Your App
+## 4. Adding the Component To Your App
 
 This is the last step to finally see our Fabric Component running on our app.
 
-#### Shared
+### Shared
 
 To connect our Component to the app, we have to first add it as a dependency for our app. This step is required for both iOS and Android and can be done using the following command:
 
@@ -768,7 +768,7 @@ yarn remove rn-centered-text
 
 :::
 
-#### iOS
+### iOS - Configure Dependencies
 
 To use the new component in iOS, we need to install the dependencies in our iOS project, given that they are changed. To do so, we need to run these commands:
 
@@ -779,7 +779,7 @@ RCT_NEW_ARCH_ENABLED=1 pod install
 
 This command will look for all the dependencies of the project and it will install the iOS ones. The `RCT_NEW_ARCH_ENABLED=1` instruct **Cocoapods** that it has to run some additional operations to run the **CodeGen** that is required by **Fabric**.
 
-#### Android
+### Android - Configure Dependencies
 
 Android configuration requires slightly more steps in order to be able to use our new Component.
 
@@ -801,7 +801,7 @@ This can be with these steps:
    # will have to include the following autogenerated makefile.
    # include $(GENERATED_SRC_DIR)/codegen/jni/Android.mk
 
-   +include $(NODE_MODULES_DIR)/rnt-centered-text/android/build/generated/source/codegen/jni/Android.mk
+   +include $(NODE_MODULES_DIR)/rtn-centered-text/android/build/generated/source/codegen/jni/Android.mk
    include $(CLEAR_VARS)
    ```
 
@@ -836,7 +836,7 @@ Finally, we need to configure the Fabric component registry to load the Fabric C
    // Custom Fabric Components go here. You can register custom
    ```
 
-#### JS
+### JS
 
 Finally, we can read the Component in our JS application.
 To do so, we have to:
@@ -844,7 +844,7 @@ To do so, we have to:
 1. Import the Component in the js file that uses it. So, if we want to use it in the `App.js`, we need to add this line:
 
    ```js title="App.js"
-   import RTNCenteredText from 'rnt-centered-text/js/RNTCenteredTextNativeComponent';
+   import RTNCenteredText from 'rtn-centered-text/js/RTNCenteredTextNativeComponent';
    ```
 
 2. Then, we need to use it in another React Native component. The syntax is the same as for any other component:
