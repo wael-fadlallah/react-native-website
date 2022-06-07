@@ -242,18 +242,18 @@ Finally, we have a set of dependencies that are required by the new architecture
 
 For what concerns Android, we need to create a `build.gradle` file in the `android` folder. The file will have the following shape
 
-```kotlin title="build.gradle"
+```ruby title="build.gradle"
 buildscript {
-  ext.safeExtGet = {prop, fallback ->
-    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
-  }
-  repositories {
-    google()
-    gradlePluginPortal()
-  }
-  dependencies {
-    classpath("com.android.tools.build:gradle:7.1.1")
-  }
+    ext.safeExtGet = {prop, fallback ->
+        rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+    }
+    repositories {
+        google()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:7.1.1")
+    }
 }
 
 apply plugin: 'com.android.library'
@@ -535,7 +535,6 @@ This script first adds the package to the app, in the same way iOS does. Then, a
 
 :::note
 To run the CodeGen, you need to enable the **New Architecture** in the Android app. This can be done by opening the `gradle.properties` files and by switching the `newArchEnabled` property from `false` to `true`.
-
 :::
 
 The generated code is stored in the `MyApp/node_modules/rnt-centered-text/android/build/generated/source/codegen` folder and it has this structure:
